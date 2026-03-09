@@ -20,12 +20,12 @@ constexpr size_t global_meta_size = sizeof(std::pmr::memory_resource*) + sizeof(
 
 // Sizes of occupied blocks' metadata
 // | backward* | forward* | size | p* |
-constexpr size_t backward_oc_block_offset = 0
+constexpr size_t backward_oc_block_offset = 0;
 constexpr size_t forward_oc_block_offset = aligner(backward_oc_block_offset + sizeof(void*), alignof(void*));
 constexpr size_t size_of_block_offset = aligner(forward_oc_block_offset + sizeof(void*), alignof(size_t));
 constexpr size_t parent_of_block_offset = aligner(size_of_block_offset + sizeof(size_t), alignof(void*));
 
-constexpr size_t = oc_block_meta_size = sizeof(void*) + sizeof(void*) + sizeof(size_t) + sizeof(void*);
+constexpr size_t oc_block_meta_size = sizeof(void*) + sizeof(void*) + sizeof(size_t) + sizeof(void*);
 
 std::byte *ptr_to_bytes(void *ptr) noexcept
 {
@@ -38,13 +38,13 @@ const std::byte *ptr_to_bytes(const void *ptr) noexcept
 }
 
 template<typename T>
-T &access_atribute(void *start, size_t offset)
+T &access_field(void *start, size_t offset)
 {
     return *reinterpret_cast<T*>(ptr_to_bytes(start) + offset);
 }
 
 template<typename T>
-const T &access_atribute(const void *start, size_t offset)
+const T &access_field(const void *start, size_t offset)
 {
     return *reinterpret_cast<const T*>(ptr_to_bytes(start) + offset);
 }
@@ -53,7 +53,7 @@ void *allocate_memory_block(size_t space_size, std::pmr::memory_resource *parent
 {
     if (parent_allocator == nullptr)
     {
-        return parent_allocator->allocate(space_size, std::max_align_t);
+        return parent_allocator->allocate(space_size, alignof(std::max_align_t));
     }
 
     return ::operator new(space_size);
@@ -66,9 +66,9 @@ void release_memory_block(void *start) noexcept
         return;
     }
 
-    auto *parent_allocator = access_atribute<std::pmr::memory_resource*>(start, parent_allocator_offset);
-    size_t size = access_atribute<size_t>(start, size_offset);
-    access_atribute<std::mutex>(start, mutex_offset).~mutex();
+    auto *parent_allocator = access_field<std::pmr::memory_resource*>(start, parent_allocator_offset);
+    size_t size = access_field<size_t>(start, size_offset);
+    access_field<std::mutex>(start, mutex_offset).~mutex();
 
     if (parent_allocator == nullptr)
     {
@@ -76,13 +76,38 @@ void release_memory_block(void *start) noexcept
     } 
     else
     {
-        parent_allocator->deallocate(start, size, std::max_align_t);
+        parent_allocator->deallocate(start, size, alignof(std::max_align_t));
     }
+}
+
+void init_memory_block(void *start, size_t space_size, std::pmr::memory_resource *parent_allocator, allocator_with_fit_mode::fit_mode fit_mode)
+{
+    access_field<std::pmr::memory_resource*>(start, parent_allocator_offset) = parent_allocator;
+    access_field<size_t>(start, size_offset) = space_size;
+    access_field<allocator_with_fit_mode::fit_mode>(start, fit_mode_offset) = fit_mode;
+
+    new (&access_field<std::mutex>(start, mutex_offset)) std::mutex();
+
+    access_field<void*>(start, first_oc_block_offset) = nullptr;
+}
+
+void *access_last_oc_block(void *start) noexcept
+{
+    void *curr = access_field<void*>(start, first_oc_block_offset);
+
+    if (curr == nullptr) return nullptr;
+
+    while(access_field<void*>(curr, forward_oc_block_offset) != nullptr)
+    {
+        curr = access_field<void*>(curr, forward_oc_block_offset);
+    }
+
+    return curr;
 }
 
 allocator_boundary_tags::~allocator_boundary_tags()
 {
-    if (_trusted_memory == nullptr) return;
+    release_memory_block(_trusted_memory);
 
     _trusted_memory = nullptr;
 }
@@ -96,18 +121,45 @@ allocator_boundary_tags::allocator_boundary_tags(
 allocator_boundary_tags &allocator_boundary_tags::operator=(
     allocator_boundary_tags &&other) noexcept
 {
-    throw not_implemented("allocator_boundary_tags &allocator_boundary_tags::operator=(allocator_boundary_tags &&) noexcept", "your code should be here...");
-}
+    if (this != &other)
+    {
+        release_memory_block(_trusted_memory);
+        _trusted_memory = other._trusted_memory;
+        other._trusted_memory = nullptr;
+    }
 
+    return *this;
+}
 
 /** If parent_allocator* == nullptr you should use std::pmr::get_default_resource()
  */
 allocator_boundary_tags::allocator_boundary_tags(
         size_t space_size,
         std::pmr::memory_resource *parent_allocator,
-        allocator_with_fit_mode::fit_mode allocate_fit_mode)
+        allocator_with_fit_mode::fit_mode allocate_fit_mode) : _trusted_memory(nullptr)
 {
-    throw not_implemented("allocator_boundary_tags::allocator_boundary_tags(size_t,std::pmr::memory_resource *,logger *,allocator_with_fit_mode::fit_mode)", "your code should be here...");
+    if (parent_allocator == nullptr)
+    {
+        parent_allocator == std::pmr::get_default_resource();
+    }
+
+    if (space_size < global_meta_size + oc_block_meta_size)
+    {
+        throw std::bad_alloc();
+    }
+
+    _trusted_memory = allocate_memory_block(space_size, parent_allocator);
+
+    try 
+    {
+        init_memory_block(_trusted_memory, space_size, parent_allocator, allocate_fit_mode);
+    }
+    catch(...)
+    {
+        parent_allocator->deallocate(_trusted_memory, space_size);
+        _trusted_memory = nullptr;
+        throw;
+    }
 }
 
 [[nodiscard]] void *allocator_boundary_tags::do_allocate_sm(
@@ -119,13 +171,40 @@ allocator_boundary_tags::allocator_boundary_tags(
 void allocator_boundary_tags::do_deallocate_sm(
     void *at)
 {
-    throw not_implemented("void allocator_boundary_tags::do_deallocate_sm(void *)", "your code should be here...");
+    if (at == nullptr) return;
+
+    std::lock_guard<std::mutex> lock(access_field<std::mutex>(_trusted_memory, mutex_offset));
+
+    void *block = ptr_to_bytes(at) - oc_block_meta_size;
+
+    if (access_field<void*>(block, parent_of_block_offset) != _trusted_memory)
+    {
+        throw std::invalid_argument("Block doesn't belong to this allocator!");
+    }
+
+    void *prev = access_field<void*>(block, backward_oc_block_offset);
+    void *next = access_field<void*>(block, forward_oc_block_offset);
+
+    if (prev == nullptr) 
+    {
+        access_field<void*>(_trusted_memory, first_oc_block_offset) = next;
+    }
+    else
+    {
+        access_field<void*>(prev, forward_oc_block_offset) = next;
+    }
+
+    if (next != nullptr)
+    {
+        access_field<void*>(next, backward_oc_block_offset) = prev;
+    }
 }
 
 inline void allocator_boundary_tags::set_fit_mode(
     allocator_with_fit_mode::fit_mode mode)
 {
-    throw not_implemented("inline void allocator_boundary_tags::set_fit_mode(allocator_with_fit_mode::fit_mode)", "your code should be here...");
+    std::lock_guard<std::mutex> lock(access_field<std::mutex>(_trusted_memory, mutex_offset));
+    access_field<allocator_with_fit_mode::fit_mode>(_trusted_memory, fit_mode_offset) = mode;
 }
 
 
