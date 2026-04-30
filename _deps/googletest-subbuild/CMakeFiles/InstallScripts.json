@@ -1,7 +1,7 @@
 {
 	"InstallScripts" : 
 	[
-		"/home/uncommonde4th/Projects/C++/FIIT_SP/_deps/googletest-subbuild/cmake_install.cmake"
+		"/home/uncommonde4th/Projects/FIIT_SP/_deps/googletest-subbuild/cmake_install.cmake"
 	],
 	"Parallel" : false
 }
