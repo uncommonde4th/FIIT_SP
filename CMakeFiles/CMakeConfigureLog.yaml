@@ -24679,3 +24679,310 @@ events:
       CMAKE_SYSTEM_LIBRARY_PATH:
         - "/usr/lib/X11"
 ...
+
+---
+events:
+  -
+    kind: "find_package-v1"
+    backtrace:
+      - "/usr/lib/cmake/Boost-1.91.0/BoostConfig.cmake:141 (find_package)"
+      - "/usr/lib/cmake/Boost-1.91.0/BoostConfig.cmake:215 (boost_find_component)"
+      - "/usr/share/cmake/Modules/FindBoost.cmake:610 (find_package)"
+      - "CMakeLists.txt:18 (find_package)"
+    name: "boost_headers"
+    configs:
+      -
+        filename: "boost_headers.cps"
+        kind: "cps"
+      -
+        filename: "boost_headersConfig.cmake"
+        kind: "cmake"
+      -
+        filename: "boost_headers-config.cmake"
+        kind: "cmake"
+    version_request:
+      version: "1.91.0"
+      version_complete: "1.91.0"
+      exact: true
+    settings:
+      required: "required_explicit"
+      quiet: true
+      global: false
+      policy_scope: true
+      bypass_provider: false
+      hints:
+        - "/usr/lib/cmake"
+      names:
+        - "boost_headers"
+      path_suffixes:
+        - ""
+      paths:
+        CMAKE_FIND_USE_CMAKE_PATH: true
+        CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: true
+        CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+        CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+        CMAKE_FIND_USE_INSTALL_PREFIX: true
+        CMAKE_FIND_USE_PACKAGE_ROOT_PATH: true
+        CMAKE_FIND_USE_CMAKE_PACKAGE_REGISTRY: true
+        CMAKE_FIND_USE_SYSTEM_PACKAGE_REGISTRY: true
+        CMAKE_FIND_ROOT_PATH_MODE: "BOTH"
+    candidates:
+      -
+        path: "/home/uncommonde4th/Projects/FIIT_SP/CMakeFiles/pkgRedirects/boost_headersConfig.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/home/uncommonde4th/Projects/FIIT_SP/CMakeFiles/pkgRedirects/boost_headers-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/home/uncommonde4th/Projects/FIIT_SP/CMakeFiles/pkgRedirects/lib/cps/boost_headers.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/uncommonde4th/Projects/FIIT_SP/CMakeFiles/pkgRedirects/share/cps/boost_headers.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/usr/lib/cmake/boost_headersConfig.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/usr/lib/cmake/boost_headers-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/usr/lib/cmake/boost_headers-1.91.0/boost_headersConfig.cmake"
+        mode: "config"
+        reason: "no_exist"
+    found:
+      path: "/usr/lib/cmake/boost_headers-1.91.0/boost_headers-config.cmake"
+      mode: "config"
+      version: "1.91.0"
+    search_context:
+      ENV{PATH}:
+        - "/usr/local/sbin"
+        - "/usr/local/bin"
+        - "/usr/bin"
+        - "/usr/bin/site_perl"
+        - "/usr/bin/vendor_perl"
+        - "/usr/bin/core_perl"
+      CMAKE_INSTALL_PREFIX: "/usr/local"
+      CMAKE_SYSTEM_PREFIX_PATH:
+        - "/usr/local"
+        - "/usr"
+        - "/"
+        - "/usr"
+        - "/usr/local"
+        - "/usr/X11R6"
+        - "/usr/pkg"
+        - "/opt"
+  -
+    kind: "find_package-v1"
+    backtrace:
+      - "/usr/lib/cmake/Boost-1.91.0/BoostConfig.cmake:141 (find_package)"
+      - "/usr/lib/cmake/Boost-1.91.0/BoostConfig.cmake:262 (boost_find_component)"
+      - "/usr/share/cmake/Modules/FindBoost.cmake:610 (find_package)"
+      - "CMakeLists.txt:18 (find_package)"
+    name: "boost_system"
+    configs:
+      -
+        filename: "boost_system.cps"
+        kind: "cps"
+      -
+        filename: "boost_systemConfig.cmake"
+        kind: "cmake"
+      -
+        filename: "boost_system-config.cmake"
+        kind: "cmake"
+    version_request:
+      version: "1.91.0"
+      version_complete: "1.91.0"
+      exact: true
+    settings:
+      required: "required_explicit"
+      quiet: true
+      global: false
+      policy_scope: true
+      bypass_provider: false
+      hints:
+        - "/usr/lib/cmake"
+      names:
+        - "boost_system"
+      path_suffixes:
+        - ""
+      paths:
+        CMAKE_FIND_USE_CMAKE_PATH: true
+        CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: true
+        CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+        CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+        CMAKE_FIND_USE_INSTALL_PREFIX: true
+        CMAKE_FIND_USE_PACKAGE_ROOT_PATH: true
+        CMAKE_FIND_USE_CMAKE_PACKAGE_REGISTRY: true
+        CMAKE_FIND_USE_SYSTEM_PACKAGE_REGISTRY: true
+        CMAKE_FIND_ROOT_PATH_MODE: "BOTH"
+    candidates:
+      -
+        path: "/home/uncommonde4th/Projects/FIIT_SP/CMakeFiles/pkgRedirects/boost_systemConfig.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/home/uncommonde4th/Projects/FIIT_SP/CMakeFiles/pkgRedirects/boost_system-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/home/uncommonde4th/Projects/FIIT_SP/CMakeFiles/pkgRedirects/lib/cps/boost_system.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/home/uncommonde4th/Projects/FIIT_SP/CMakeFiles/pkgRedirects/share/cps/boost_system.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/usr/lib/cmake/boost_systemConfig.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/usr/lib/cmake/boost_system-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/usr/lib/cmake/lib/cps/boost_system.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/usr/lib/cmake/share/cps/boost_system.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/usr/local/boost_systemConfig.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/usr/local/boost_system-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/usr/local/lib/cps/boost_system.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/usr/local/share/cps/boost_system.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/usr/boost_systemConfig.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/usr/boost_system-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/usr/lib/cps/boost_system.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/usr/share/cps/boost_system.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/usr/bin/site_perl/boost_systemConfig.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/usr/bin/site_perl/boost_system-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/usr/bin/site_perl/lib/cps/boost_system.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/usr/bin/site_perl/share/cps/boost_system.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/usr/bin/vendor_perl/boost_systemConfig.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/usr/bin/vendor_perl/boost_system-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/usr/bin/vendor_perl/lib/cps/boost_system.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/usr/bin/vendor_perl/share/cps/boost_system.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/usr/bin/core_perl/boost_systemConfig.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/usr/bin/core_perl/boost_system-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/usr/bin/core_perl/lib/cps/boost_system.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/usr/bin/core_perl/share/cps/boost_system.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/boost_systemConfig.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/boost_system-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/lib/cps/boost_system.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/share/cps/boost_system.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/opt/boost_systemConfig.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/opt/boost_system-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/opt/lib/cps/boost_system.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "/opt/share/cps/boost_system.cps"
+        mode: "cps"
+        reason: "no_exist"
+    found: null
+    search_context:
+      ENV{PATH}:
+        - "/usr/local/sbin"
+        - "/usr/local/bin"
+        - "/usr/bin"
+        - "/usr/bin/site_perl"
+        - "/usr/bin/vendor_perl"
+        - "/usr/bin/core_perl"
+      CMAKE_INSTALL_PREFIX: "/usr/local"
+      CMAKE_SYSTEM_PREFIX_PATH:
+        - "/usr/local"
+        - "/usr"
+        - "/"
+        - "/usr"
+        - "/usr/local"
+        - "/usr/X11R6"
+        - "/usr/pkg"
+        - "/opt"
+...
