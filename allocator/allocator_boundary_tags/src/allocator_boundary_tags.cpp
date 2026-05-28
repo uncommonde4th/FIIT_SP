@@ -74,63 +74,66 @@ namespace {
         void* result = nullptr;
         size_t best_diff = (mode == allocator_with_fit_mode::fit_mode::the_worst_fit) ? 0 : SIZE_MAX;
         
-        void* current = static_cast<char*>(trusted) + ALLOCATOR_METADATA_SIZE;
         void* end = get_trusted_end(trusted);
-        void* first_occupied = get_first_occupied(trusted);
+        void* prev_occupied = nullptr;
+        void* current_occupied = get_first_occupied(trusted);
         
-        while (current < end) {
-            void* temp = first_occupied;
-            while (temp && temp < current) {
-                temp = get_next_occupied(temp);
-            }
-
-            
-             if (temp == current) {
-                current = get_next_block(current);
+        while (true) {
+            // Начало свободной области
+            void* free_start;
+            if (prev_occupied == nullptr) {
+                free_start = static_cast<char*>(trusted) + ALLOCATOR_METADATA_SIZE;
             } else {
-                size_t free_size;
-                if (temp) {
-                    free_size = static_cast<char*>(temp) - static_cast<char*>(current);
-                } else {
-                    free_size = static_cast<char*>(end) - static_cast<char*>(current);
+                free_start = get_next_block(prev_occupied);
+            }
+            
+            // Конец свободной области
+            void* free_end;
+            if (current_occupied == nullptr) {
+                free_end = end;
+            } else {
+                free_end = current_occupied;
+            }
+            
+            // Размер свободной области
+            size_t free_size = static_cast<char*>(free_end) - static_cast<char*>(free_start);
+            
+            if (free_size >= required_size) {
+                size_t remaining = free_size - required_size;
+                
+                if (remaining > 0 && remaining < OCCUPIED_BLOCK_METADATA_SIZE) {
+                    if (mode == allocator_with_fit_mode::fit_mode::first_fit) {
+                        return free_start;
+                    }
+                    remaining = 0;
                 }
                 
-                if (free_size >= required_size) {
-                    size_t remaining = free_size - required_size;
-
-                    if (remaining > 0 && remaining < OCCUPIED_BLOCK_METADATA_SIZE) {
-                        if (mode == allocator_with_fit_mode::fit_mode::first_fit) {
-                            return current;
+                switch (mode) {
+                    case allocator_with_fit_mode::fit_mode::first_fit:
+                        return free_start;
+                        
+                    case allocator_with_fit_mode::fit_mode::the_best_fit:
+                        if (remaining < best_diff) {
+                            best_diff = remaining;
+                            result = free_start;
                         }
-                        remaining = 0;
-                    }
-                    
-                    switch (mode) {
-                        case allocator_with_fit_mode::fit_mode::first_fit:
-                            return current;
-                            
-                        case allocator_with_fit_mode::fit_mode::the_best_fit:
-                            if (remaining < best_diff) {
-                                best_diff = remaining;
-                                result = current;
-                            }
-                            break;
-                            
-                        case allocator_with_fit_mode::fit_mode::the_worst_fit:
-                            if (remaining > best_diff) {
-                                best_diff = remaining;
-                                result = current;
-                            }
-                            break;
-                    }
-                }
-                
-                if (free_size > 0) {
-                    current = static_cast<char*>(current) + free_size;
-                } else {
-                    break;
+                        break;
+                        
+                    case allocator_with_fit_mode::fit_mode::the_worst_fit:
+                        if (remaining > best_diff) {
+                            best_diff = remaining;
+                            result = free_start;
+                        }
+                        break;
                 }
             }
+            
+            if (current_occupied == nullptr) {
+                break;
+            }
+            
+            prev_occupied = current_occupied;
+            current_occupied = get_next_occupied(current_occupied);
         }
         
         return result;
