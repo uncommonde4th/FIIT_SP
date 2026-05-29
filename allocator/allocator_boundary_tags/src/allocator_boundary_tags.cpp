@@ -180,18 +180,16 @@ namespace {
             get_prev_occupied(next) = prev;
         }
     }
-    
-    bool belongs_to_allocator(void* trusted, void* ptr) {
+
+    bool is_occupied_block_start(void* trusted, void* ptr) {
         if (!trusted || !ptr) return false;
         
         void* memory_start = static_cast<char*>(trusted) + ALLOCATOR_METADATA_SIZE;
         void* memory_end = get_trusted_end(trusted);
         
-        return ptr >= memory_start && ptr < memory_end;
-    }
-    
-    bool is_occupied_block_start(void* trusted, void* ptr) {
-        if (!belongs_to_allocator(trusted, ptr)) return false;
+        if (ptr < memory_start || ptr >= memory_end) {
+            return false;
+        }
         
         void* current = get_first_occupied(trusted);
         while (current) {
@@ -199,6 +197,31 @@ namespace {
             current = get_next_occupied(current);
         }
         return false;
+    }
+
+    bool belongs_to_allocator(void* trusted, void* ptr) {
+        if (!trusted || !ptr) return false;
+        
+        void* memory_start = static_cast<char*>(trusted) + ALLOCATOR_METADATA_SIZE;
+        void* memory_end = get_trusted_end(trusted);
+        
+        if (ptr < memory_start || ptr >= memory_end) {
+            return false;
+        }
+        
+        void* potential_block = static_cast<char*>(ptr) - OCCUPIED_BLOCK_METADATA_SIZE;
+        
+        if (!is_occupied_block_start(trusted, potential_block)) {
+            return false;
+        }
+        
+        // Основное
+        if (get_block_owner(potential_block) != trusted) {
+            return false;
+        }
+        
+        void* block_data = get_block_data(potential_block);
+        return ptr == block_data;
     }
 }
 
@@ -236,29 +259,31 @@ allocator_boundary_tags::allocator_boundary_tags(const allocator_boundary_tags &
     
     new (&get_mutex(_trusted_memory)) std::mutex();
     
+    ptrdiff_t offset = static_cast<char*>(_trusted_memory) - static_cast<char*>(other._trusted_memory);
+    
     void* first_occupied = get_first_occupied(_trusted_memory);
     if (first_occupied) {
-        ptrdiff_t offset = static_cast<char*>(_trusted_memory) - static_cast<char*>(other._trusted_memory);
-        void* first_occupied = get_first_occupied(_trusted_memory);
-        if (first_occupied) {
-            first_occupied = static_cast<char*>(first_occupied) + offset;
-            get_first_occupied(_trusted_memory) = first_occupied;
-            void* current = first_occupied;
-            while (current) {
-                void* next = get_next_occupied(current);
-                void* prev = get_prev_occupied(current);
-                
-                if (next) {
-                    next = static_cast<char*>(next) + offset;
-                    get_next_occupied(current) = next;
-                }
-                
-                if (prev) {
-                    prev = static_cast<char*>(prev) + offset;
-                    get_prev_occupied(current) = prev;
-                }
-                current = next;
+        first_occupied = static_cast<char*>(first_occupied) + offset;
+        get_first_occupied(_trusted_memory) = first_occupied;
+        
+        void* current = first_occupied;
+        while (current) {
+            void* next = get_next_occupied(current);
+            void* prev = get_prev_occupied(current);
+            
+            if (next) {
+                next = static_cast<char*>(next) + offset;
+                get_next_occupied(current) = next;
             }
+            
+            if (prev) {
+                prev = static_cast<char*>(prev) + offset;
+                get_prev_occupied(current) = prev;
+            }
+            
+            get_block_owner(current) = _trusted_memory;
+            
+            current = next;
         }
     }
 }
@@ -266,7 +291,7 @@ allocator_boundary_tags::allocator_boundary_tags(const allocator_boundary_tags &
 allocator_boundary_tags &allocator_boundary_tags::operator=(const allocator_boundary_tags &other) {
     if (this != &other) {
         allocator_boundary_tags tmp(other);
-        std::swap(_trusted_memory, tmp._trusted_memory);
+        *this = std::move(tmp);
     }
     return *this;
 }
@@ -322,6 +347,10 @@ allocator_boundary_tags::allocator_boundary_tags(
 }
 
 [[nodiscard]] void *allocator_boundary_tags::do_allocate_sm(size_t size) {
+    if (!_trusted_memory) {
+        throw std::bad_alloc();
+    }
+
     std::lock_guard<std::mutex> lock(get_mutex(_trusted_memory));
     
     size_t total_block_size = size + OCCUPIED_BLOCK_METADATA_SIZE;
@@ -368,6 +397,10 @@ void allocator_boundary_tags::do_deallocate_sm(void *at) {
     if (!at) return;
     
     std::lock_guard<std::mutex> lock(get_mutex(_trusted_memory));
+
+    if (!belongs_to_allocator(_trusted_memory, at)) {
+        return;
+    }
     
     void* block = static_cast<char*>(at) - occupied_block_metadata_size;
     
